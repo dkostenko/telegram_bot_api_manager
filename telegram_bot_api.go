@@ -50,7 +50,7 @@ func (this *ApiManager) SendMessage(chatId int, text string) {
     url := this.getUrl("sendMessage")
 
     params := []*Param{
-        &Param{Key: "text", FileUrl: text},
+        &Param{Key: "text", Value: text},
         &Param{Key: "chat_id", Value: strconv.Itoa(chatId)},
     }
     
