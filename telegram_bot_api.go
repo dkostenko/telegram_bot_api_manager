@@ -46,15 +46,19 @@ func NewApiManager(baseApi string, secretToken string, debugMode bool) *ApiManag
     return instance
 }
 
-func (this *ApiManager) SendMessage(chatId int, text string) {
+func (this *ApiManager) SendMessage(chatId int, text string, replyToMessageId int) {
     url := this.getUrl("sendMessage")
 
     params := []*Param{
         &Param{Key: "text", Value: text},
         &Param{Key: "chat_id", Value: strconv.Itoa(chatId)},
+        &Param{Key: "reply_markup", Value: "{\"resize_keyboard\":true,\"one_time_keyboard\":true,\"keyboard\":[[\"first\",\"second\"],[\"4444\",\"5555\"]]"},
+        // &Param{Key: "reply_markup", Value: "{\"force_reply\":true}"},
     }
     
-    // reply_to_message_id
+    if replyToMessageId > 0 {
+        params = append(params, &Param{Key: "reply_to_message_id", Value: strconv.Itoa(replyToMessageId)})
+    }
 
     _, err := this.sendPost(url, params)
     if err != nil {
@@ -68,12 +72,20 @@ func (this *ApiManager) GetMe() {
     this.sendGet(url, nil)
 }
 
-func (this *ApiManager) SendPhoto(chatId int, fileUrl string) {
+func (this *ApiManager) SendPhoto(chatId int, fileUrl string, caption string, replyToMessageId int) {
     url := this.getUrl("sendPhoto")
 
     params := []*Param{
         &Param{Key: "photo", FileUrl: fileUrl},
         &Param{Key: "chat_id", Value: strconv.Itoa(chatId)},
+    }
+    
+    if caption != "" {
+        params = append(params, &Param{Key: "caption", Value: caption},)
+    }
+    
+    if replyToMessageId > 0 {
+        params = append(params, &Param{Key: "reply_to_message_id", Value: strconv.Itoa(replyToMessageId)})
     }
 
     this.sendPost(url, params)
