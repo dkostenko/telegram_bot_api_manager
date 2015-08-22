@@ -1,5 +1,5 @@
-// Package telegram_bot_api provides methods for communicating with Telegram Bot API.
-package telegram_bot_api
+// Package tgbot provides methods for communicating with Telegram Bot API.
+package tgbot
 
 import (
     "sync"
@@ -46,13 +46,13 @@ func NewApiManager(baseApi string, secretToken string, debugMode bool) *ApiManag
     return instance
 }
 
-func (this *ApiManager) SendMessage(chatId int, text string, replyToMessageId int) {
+func (this *ApiManager) SendMessage(chatId int, text string, replyToMessageId int, replyMarkup string) {
     url := this.getUrl("sendMessage")
 
     params := []*Param{
         &Param{Key: "text", Value: text},
         &Param{Key: "chat_id", Value: strconv.Itoa(chatId)},
-        &Param{Key: "reply_markup", Value: "{\"resize_keyboard\":true,\"one_time_keyboard\":true,\"keyboard\":[[\"first\",\"second\"],[\"4444\",\"5555\"]]"},
+        &Param{Key: "reply_markup", Value: replyMarkup},
         // &Param{Key: "reply_markup", Value: "{\"force_reply\":true}"},
     }
     
@@ -173,5 +173,59 @@ func (this *ApiManager) sendGet(url string, params []*Param) {
 
 func (this *ApiManager) getUrl(method string) (url string) {
     url = this.baseApi + "/" + this.secretToken + "/" + method
+    return
+}
+
+
+
+
+
+func sendPost(url string, params []*Param) (string, error) {
+    body := &bytes.Buffer{}
+    writer := multipart.NewWriter(body)
+    
+    for _, param := range params {
+        if param.FileUrl != "" {
+            res, err := http.Get(param.FileUrl)
+            
+            if err != nil { return "", err }
+            defer res.Body.Close()
+            
+            file := res.Body
+            part, err := writer.CreateFormFile(param.Key, filepath.Base(param.FileUrl))
+            if err != nil { return "", err }
+            
+            _, err = io.Copy(part, file)
+            if err != nil { return "", err }
+        } else {
+            writer.WriteField(param.Key, param.Value)
+        }
+    }
+
+    err := writer.Close()
+    if err != nil { return "", err }
+
+    req, _ := http.NewRequest("POST", url, body)
+    req.Header.Set("Content-Type", writer.FormDataContentType())
+    
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    
+    if err != nil { return "", err }
+    defer resp.Body.Close()
+
+    resBody, _ := ioutil.ReadAll(resp.Body)
+    json := string(resBody)
+
+    log.Println("response Status:", resp.Status)
+    log.Println("response Headers:", resp.Header)
+    log.Println("response Body:", json)
+    
+    return json, nil
+}
+
+
+func getUrl(method string) (url string) {
+    url = "https://api.telegram.org/bot94859224:AAFiKYi7ZgU8CDOyH6HJ-42ON4EThadtSy0/" + method
     return
 }
