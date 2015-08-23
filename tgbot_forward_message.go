@@ -9,14 +9,13 @@ import (
 )
 
 type (
-	SendMessageRequest struct {
-		ChatId           int
-		Text             string
-		ReplyToMessageId int
-		ReplyMarkup
+	ForwardMessageRequest struct {
+		ChatId     int
+		FromChatId int
+		MessageId  int
 	}
 
-	SendMessageResponse struct {
+	ForwardMessageResponse struct {
 		Ok          bool    `json:"ok"`
 		Result      Message `json:"result"`
 		ErrorCode   int     `json:"error_code"`
@@ -24,8 +23,8 @@ type (
 	}
 )
 
-func (this *SendMessageRequest) Send(secret string) (*SendMessageResponse, error) {
-	url := getUrl("sendMessage", secret)
+func (this *ForwardMessageRequest) Send(secret string) (*ForwardMessageResponse, error) {
+	url := getUrl("forwardMessage", secret)
 
 	params, err := this.getParams()
 	if err != nil {
@@ -39,7 +38,7 @@ func (this *SendMessageRequest) Send(secret string) (*SendMessageResponse, error
 
 	dec := json.NewDecoder(strings.NewReader(respJson))
 
-	var resp *SendMessageResponse
+	var resp *ForwardMessageResponse
 	if err := dec.Decode(&resp); err == io.EOF {
 		return resp, nil
 	} else if err != nil {
@@ -49,14 +48,11 @@ func (this *SendMessageRequest) Send(secret string) (*SendMessageResponse, error
 	return resp, nil
 }
 
-func (this *SendMessageRequest) getParams() ([]*Param, error) {
-	replyMarkupJson, _ := json.Marshal(this.ReplyMarkup)
-
+func (this *ForwardMessageRequest) getParams() ([]*Param, error) {
 	res := []*Param{
 		{Type: "string", Key: "chat_id", Value: strconv.Itoa(this.ChatId)},
-		{Type: "string", Key: "text", Value: this.Text},
-		{Type: "string", Key: "reply_markup", Value: string(replyMarkupJson)},
-		{Type: "string", Key: "reply_to_message_id", Value: string(this.ReplyToMessageId)},
+		{Type: "string", Key: "from_chat_id", Value: strconv.Itoa(this.FromChatId)},
+		{Type: "string", Key: "message_id", Value: strconv.Itoa(this.MessageId)},
 	}
 
 	return res, nil

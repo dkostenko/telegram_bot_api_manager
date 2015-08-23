@@ -9,14 +9,16 @@ import (
 )
 
 type (
-	SendMessageRequest struct {
+	SendPhotoRequest struct {
 		ChatId           int
-		Text             string
+		Caption          string
+		PhotoUrl         string
+		PhotoPath        string
 		ReplyToMessageId int
 		ReplyMarkup
 	}
 
-	SendMessageResponse struct {
+	SendPhotoResponse struct {
 		Ok          bool    `json:"ok"`
 		Result      Message `json:"result"`
 		ErrorCode   int     `json:"error_code"`
@@ -24,8 +26,8 @@ type (
 	}
 )
 
-func (this *SendMessageRequest) Send(secret string) (*SendMessageResponse, error) {
-	url := getUrl("sendMessage", secret)
+func (this *SendPhotoRequest) Send(secret string) (*SendPhotoResponse, error) {
+	url := getUrl("sendPhoto", secret)
 
 	params, err := this.getParams()
 	if err != nil {
@@ -39,7 +41,7 @@ func (this *SendMessageRequest) Send(secret string) (*SendMessageResponse, error
 
 	dec := json.NewDecoder(strings.NewReader(respJson))
 
-	var resp *SendMessageResponse
+	var resp *SendPhotoResponse
 	if err := dec.Decode(&resp); err == io.EOF {
 		return resp, nil
 	} else if err != nil {
@@ -49,14 +51,21 @@ func (this *SendMessageRequest) Send(secret string) (*SendMessageResponse, error
 	return resp, nil
 }
 
-func (this *SendMessageRequest) getParams() ([]*Param, error) {
+func (this *SendPhotoRequest) getParams() ([]*Param, error) {
 	replyMarkupJson, _ := json.Marshal(this.ReplyMarkup)
 
 	res := []*Param{
 		{Type: "string", Key: "chat_id", Value: strconv.Itoa(this.ChatId)},
-		{Type: "string", Key: "text", Value: this.Text},
 		{Type: "string", Key: "reply_markup", Value: string(replyMarkupJson)},
 		{Type: "string", Key: "reply_to_message_id", Value: string(this.ReplyToMessageId)},
+	}
+
+	if this.PhotoPath != "" {
+		res = append(res, &Param{Type: "filePath", Key: "photo", Value: this.PhotoPath})
+	}
+
+	if this.PhotoUrl != "" {
+		res = append(res, &Param{Type: "fileUrl", Key: "photo", Value: this.PhotoUrl})
 	}
 
 	return res, nil

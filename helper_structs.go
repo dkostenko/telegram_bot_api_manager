@@ -1,11 +1,18 @@
-// Package telegram_bot_api provides methods for communicating with Telegram Bot API.
 package tgbot
 
-type SendMessageResponse struct {
-	Ok          bool    `json:"ok"`
-	Result      Message `json:"result"`
-	ErrorCode   int     `json:"error_code"`
-	Description string  `json:"description"`
+type Param struct {
+	Key   string
+	Value string
+	Type  string
+}
+
+type ReplyMarkup struct {
+	Keyboard        [][]string `json:"keyboard"`
+	ResizeKeyboard  bool       `json:"resize_keyboard"`
+	OneTimeKeyboard bool       `json:"one_time_keyboard"`
+	Selective       bool       `json:"selective"`
+	HideKeyboard    bool       `json:"hide_keyboard"`
+	ForceReply      bool       `json:"force_reply"`
 }
 
 type Message struct {
