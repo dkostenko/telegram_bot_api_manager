@@ -1,4 +1,3 @@
-// Package telegram_bot_api provides methods for communicating with Telegram Bot API.
 package tgbot
 
 import (
