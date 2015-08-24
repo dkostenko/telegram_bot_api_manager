@@ -9,14 +9,17 @@ import (
 )
 
 type (
-	SendMessageRequest struct {
+	SendDocumentRequest struct {
 		ChatId           int
-		Text             string
+		Caption          string
+		DocumentUrl      string
+		DocumentPath     string
+		Document         string
 		ReplyToMessageId int
 		ReplyMarkup
 	}
 
-	SendMessageResponse struct {
+	SendDocumentResponse struct {
 		Ok          bool    `json:"ok"`
 		Result      Message `json:"result"`
 		ErrorCode   int     `json:"error_code"`
@@ -24,8 +27,8 @@ type (
 	}
 )
 
-func (this *SendMessageRequest) Send(secret string) (*SendMessageResponse, error) {
-	url := getUrl("sendMessage", secret)
+func (this *SendDocumentRequest) Send(secret string) (*SendDocumentResponse, error) {
+	url := getUrl("sendDocument", secret)
 
 	params, err := this.getParams()
 	if err != nil {
@@ -39,7 +42,7 @@ func (this *SendMessageRequest) Send(secret string) (*SendMessageResponse, error
 
 	dec := json.NewDecoder(strings.NewReader(respJson))
 
-	var resp *SendMessageResponse
+	var resp *SendDocumentResponse
 	if err := dec.Decode(&resp); err == io.EOF {
 		return resp, nil
 	} else if err != nil {
@@ -49,14 +52,25 @@ func (this *SendMessageRequest) Send(secret string) (*SendMessageResponse, error
 	return resp, nil
 }
 
-func (this *SendMessageRequest) getParams() ([]*Param, error) {
+func (this *SendDocumentRequest) getParams() ([]*Param, error) {
 	replyMarkupJson, _ := json.Marshal(this.ReplyMarkup)
 
 	res := []*Param{
 		{Type: "string", Key: "chat_id", Value: strconv.Itoa(this.ChatId)},
-		{Type: "string", Key: "text", Value: this.Text},
 		{Type: "string", Key: "reply_markup", Value: string(replyMarkupJson)},
 		{Type: "string", Key: "reply_to_message_id", Value: string(this.ReplyToMessageId)},
+	}
+
+	if this.DocumentPath != "" {
+		res = append(res, &Param{Type: "filePath", Key: "document", Value: this.DocumentPath})
+	}
+
+	if this.DocumentUrl != "" {
+		res = append(res, &Param{Type: "fileUrl", Key: "document", Value: this.DocumentUrl})
+	}
+
+	if this.Document != "" {
+		res = append(res, &Param{Type: "string", Key: "document", Value: this.Document})
 	}
 
 	return res, nil
