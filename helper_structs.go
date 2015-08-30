@@ -121,3 +121,8 @@ type Audio struct {
 	MimeType  string `json:"mime_type"`
 	FileSize  int    `json:"file_size"`
 }
+
+type Update struct {
+	UpdateId string   `json:"update_id"`
+	Message  *Message `json:"message"`
+}
